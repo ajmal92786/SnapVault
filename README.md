@@ -30,7 +30,7 @@ A backend project where users can search for photos via the Unsplash API, save t
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/ajmal92786/Pic-Storage.git
+git clone https://github.com/ajmal92786/SnapVault.git
 cd Pic-Storage
 ```
 
@@ -115,16 +115,19 @@ Server will run on:
 ## 📂 Project Structure
 
 ```
-├── config/               # Sequelize DB config
-├── migrations/           # Sequelize migration files
-├── models/               # Sequelize models
+├── config/               # DB config (Sequelize + environment bindings)
+├── migrations/           # Sequelize CLI migration files
+├── models/               # Sequelize model definitions
 ├── src/
-│   ├── controllers/      # Route handlers
-│   ├── services/         # Business logic and DB operations
+│   ├── controllers/      # Handles request logic
+│   ├── services/         # Contains reusable business logic
 │   ├── validations/      # Input validation functions
-│   └── routes/           # Express route definitions
-├── .env                  # Environment variables
-└── index.js              # Entry point
+│   └── routes/           # API route definitions
+├── .env                  # Secrets and environment variables
+├── .gitignore            # Prevents sensitive or bulky files from being tracked
+├── package.json          # Project dependencies and scripts
+├── package-lock.json     # Exact versions of installed packages
+└── index.js              # App Entry point
 
 ```
 
