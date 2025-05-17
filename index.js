@@ -11,7 +11,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Pic Storage App");
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 4040;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
