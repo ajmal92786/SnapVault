@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { photo, tag } = require("../../models");
 
 const searchImages = async (query) => {
   const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
@@ -34,4 +35,30 @@ const searchImages = async (query) => {
   }
 };
 
-module.exports = { searchImages };
+const savePhotoWithTags = async ({
+  imageUrl,
+  description,
+  altDescription,
+  tags,
+  userId,
+}) => {
+  const newPhoto = await photo.create({
+    imageUrl,
+    description,
+    altDescription,
+    userId,
+  });
+
+  if (tags?.length) {
+    const tagsData = tags.map((tag) => ({
+      name: tag,
+      photoId: newPhoto.id,
+    }));
+
+    await tag.bulkCreate(tagsData);
+  }
+
+  return newPhoto;
+};
+
+module.exports = { searchImages, savePhotoWithTags };
