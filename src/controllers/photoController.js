@@ -36,9 +36,7 @@ const savePhoto = async (req, res) => {
   // Check if user exists
   const userExists = await doesUserExistsById(userId);
   if (!userExists) {
-    return res
-      .status(404)
-      .json({ message: `User not found for id: ${userId}` });
+    return res.status(404).json({ message: `User not found` });
   }
 
   // Validate image URL
