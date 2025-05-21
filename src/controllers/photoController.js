@@ -1,9 +1,17 @@
-const { searchImages, savePhotoWithTags } = require("../services/photoService");
+const {
+  searchImages,
+  savePhotoWithTags,
+  searchByTagService,
+} = require("../services/photoService");
 const { doesUserExistsById } = require("../services/userService");
 const {
   validateImageUrl,
   validateTags,
 } = require("../validations/photoValidations");
+const {
+  validateTagQuery,
+  validateSortQuery,
+} = require("../validations/searchValidation");
 
 const searchPhotos = async (req, res) => {
   const query = req.query.query;
@@ -66,4 +74,40 @@ const savePhoto = async (req, res) => {
   }
 };
 
-module.exports = { searchPhotos, savePhoto };
+const searchPhotosByTag = async (req, res) => {
+  const { tags, sort = "ASC", userId } = req.query;
+
+  if (!validateTagQuery(tags)) {
+    return res
+      .status(400)
+      .json({ message: "Tag is required and must be a non-empty string." });
+  }
+
+  if (!validateSortQuery(sort)) {
+    return res
+      .status(400)
+      .json({ message: "Sort must be either ASC or DESC." });
+  }
+
+  try {
+    const photos = await searchByTagService(tags, sort, userId);
+
+    if (!photos.length) {
+      return res
+        .status(404)
+        .json({ message: "No images found for the given tag." });
+    }
+
+    return res.json({ photos });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong.", error: error.message });
+  }
+};
+
+module.exports = {
+  searchPhotos,
+  savePhoto,
+  searchPhotosByTag,
+};

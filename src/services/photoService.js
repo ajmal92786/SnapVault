@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { photo, tag } = require("../../models");
+const { photo, tag, searchHistory } = require("../../models");
 
 const searchImages = async (query) => {
   const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
@@ -61,4 +61,37 @@ const savePhotoWithTags = async ({
   return newPhoto;
 };
 
-module.exports = { searchImages, savePhotoWithTags };
+const searchByTagService = async (tagName, sort, userId) => {
+  // Store the search in history
+  if (userId) {
+    await searchHistory.create({ userId, query: tagName });
+  }
+
+  // Find all tags matching the query
+  const matchingTags = await tag.findAll({ where: { name: tagName } });
+
+  if (!matchingTags.length) return [];
+
+  const photoIds = matchingTags.map((t) => t.photoId);
+
+  const photos = await photo.findAll({
+    where: { id: photoIds },
+    include: [
+      {
+        model: tag,
+        attributes: ["name"],
+      },
+    ],
+    order: [["dateSaved", sort.toUpperCase()]],
+  });
+
+  // Format the data
+  return photos.map((p) => ({
+    imageUrl: p.imageUrl,
+    description: p.description,
+    dateSaved: p.dateSaved,
+    tags: p.tags.map((t) => t.name),
+  }));
+};
+
+module.exports = { searchImages, savePhotoWithTags, searchByTagService };
