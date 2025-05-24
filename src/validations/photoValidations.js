@@ -10,6 +10,9 @@ function validateTags(tags) {
     return { valid: false, message: "No more than 5 tags allowed" };
 
   for (const tag of tags) {
+    if (tag.trim().length === 0) {
+      return { valid: false, message: `Tags must be non-empty string` };
+    }
     if (tag.length > 20) {
       return { valid: false, message: `Tag "${tag}" exceeds 20 characters` };
     }
