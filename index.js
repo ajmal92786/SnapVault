@@ -2,7 +2,6 @@ const express = require("express");
 const { userRoutes } = require("./src/routes/userRoutes");
 const { photoRoutes } = require("./src/routes/photoRoutes");
 const { searchHistoryRoutes } = require("./src/routes/searchHistoryRoutes");
-// require("dotenv").config();
 
 const app = express();
 app.use(express.json());
