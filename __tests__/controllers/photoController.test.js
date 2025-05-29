@@ -1,9 +1,24 @@
-const { searchPhotos } = require("../../src/controllers/photoController");
-const { searchImages } = require("../../src/services/photoService");
+const {
+  searchPhotos,
+  savePhoto,
+} = require("../../src/controllers/photoController");
+const {
+  searchImages,
+  savePhotoWithTags,
+} = require("../../src/services/photoService");
+const { doesUserExistsById } = require("../../src/services/userService");
+const {
+  validateImageUrl,
+  validateTags,
+} = require("../../src/validations/photoValidations");
 
 jest.mock("../../src/services/photoService", () => ({
   searchImages: jest.fn(),
+  savePhotoWithTags: jest.fn(),
 }));
+
+jest.mock("../../src/services/userService");
+jest.mock("../../src/validations/photoValidations");
 
 describe("Photo Controller - searchPhotos", () => {
   let req, res;
@@ -63,5 +78,90 @@ describe("Photo Controller - searchPhotos", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ message: "API failed" });
+  });
+});
+
+describe("Photo Controller - savePhoto", () => {
+  let req, res;
+
+  beforeEach(async () => {
+    req = {
+      body: {
+        imageUrl: "https://images.unsplash.com/photo-123",
+        description: "Beautiful landscape",
+        altDescription: "Mountain view",
+        tags: ["nature", "mountain"],
+        userId: 1,
+      },
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  it("should save photo and return 201", async () => {
+    const mockResponse = {
+      id: 1,
+      imageUrl: "https://images.unsplash.com/photo-123",
+      description: "Beautiful landscape",
+      altDescription: "Mountain view",
+      tags: ["nature", "mountain"],
+      userId: 1,
+    };
+
+    doesUserExistsById.mockResolvedValue(true);
+    validateImageUrl.mockReturnValue(true);
+    validateTags.mockReturnValue({ valid: true });
+    savePhotoWithTags.mockResolvedValue(mockResponse);
+
+    await savePhoto(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Photo saved successfully",
+    });
+  });
+
+  it("should return 400 if userId is invalid", async () => {
+    req.body.userId = null;
+
+    await savePhoto(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Valid userId is required",
+    });
+  });
+
+  it("should return 404 if user does not exist", async () => {
+    doesUserExistsById.mockResolvedValue(false);
+
+    await savePhoto(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ message: "User not found" });
+  });
+
+  it("should return 400 for invalid image URL", async () => {
+    doesUserExistsById.mockResolvedValue(true);
+    validateImageUrl.mockReturnValue(false);
+
+    await savePhoto(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ message: "Invalid image URL" });
+  });
+
+  it("should return 400 if tag validation fails", async () => {
+    doesUserExistsById.mockResolvedValue(true);
+    validateImageUrl.mockReturnValue(true);
+    validateTags.mockReturnValue({ valid: false, message: "Invalid tags" });
+
+    await savePhoto(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ message: "Invalid tags" });
   });
 });
