@@ -16,7 +16,6 @@ beforeAll((done) => {
 afterAll(async () => {
   // Gracefully close the HTTP server after tests to free up the port and avoid Jest open handle warnings
   await new Promise((resolve) => server.close(resolve));
-
   await sequelize.close(); // Close the sequelize connection with supabase
 });
 
@@ -161,5 +160,58 @@ describe("POST api/photos", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toEqual("No more than 5 tags allowed");
+  });
+});
+
+describe("POST /api/photos/:photoId/tags", () => {
+  let testUser, testPhoto;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+
+    await tag.destroy({ where: {} });
+    await photo.destroy({ where: {} });
+    await user.destroy({ where: {} });
+
+    testUser = await user.create({
+      username: "testuser",
+      email: "testuser@example.com",
+    });
+
+    testPhoto = await photo.create({
+      imageUrl: "https://images.unsplash.com/photo-123",
+      description: "Beautiful landscape",
+      altDescription: "Mountain view",
+      userId: testUser.id,
+    });
+  });
+
+  it("should add valid tags to a photo", async () => {
+    const res = await request(server)
+      .post(`/api/photos/${testPhoto.id}/tags`)
+      .send({
+        tags: ["newTag1", "newTag2"],
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe("Tags added successfully");
+  });
+
+  test("should return 400 for invalid tag input (not an array)", async () => {
+    const res = await request(server)
+      .post(`/api/photos/${testPhoto.id}/tags`)
+      .send({ tags: "notAnArray" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Tags must be an array");
+  });
+
+  test("should return 400 for empty string tags", async () => {
+    const res = await request(server)
+      .post(`/api/photos/${testPhoto.id}/tags`)
+      .send({ tags: ["", "  "] });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Tags must be non-empty strings");
   });
 });
