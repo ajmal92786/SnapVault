@@ -2,13 +2,13 @@ const http = require("http");
 const request = require("supertest");
 const { app } = require("../../index");
 const axios = require("axios");
+const { sequelize, user, photo, tag } = require("../../models");
 
 jest.mock("axios");
 
 let server;
 
 beforeAll((done) => {
-  process.env.UNSPLASH_ACCESS_KEY = "test_key"; // Fake key to pass the check
   server = http.createServer(app);
   server.listen(3000, done);
 });
@@ -16,9 +16,15 @@ beforeAll((done) => {
 afterAll(async () => {
   // Gracefully close the HTTP server after tests to free up the port and avoid Jest open handle warnings
   await new Promise((resolve) => server.close(resolve));
+
+  await sequelize.close(); // Close the sequelize connection with supabase
 });
 
 describe("GET api/photos/search", () => {
+  beforeEach(() => {
+    process.env.UNSPLASH_ACCESS_KEY = "test_key"; // Fake key to pass the check
+  });
+
   it("should return 200 and list of photos", async () => {
     axios.get.mockResolvedValue({
       data: {
@@ -50,5 +56,110 @@ describe("GET api/photos/search", () => {
     const res = await request(server).get("/api/photos/search?query=unknown");
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe("No images found for the given query.");
+  });
+});
+
+describe("POST api/photos", () => {
+  let testUser;
+
+  beforeEach(async () => {
+    await photo.destroy({ where: {} });
+    await tag.destroy({ where: {} });
+    await user.destroy({ where: {} });
+
+    testUser = await user.create({
+      username: "testuser",
+      email: "testphoto@example.com",
+    });
+
+    jest.clearAllMocks();
+  });
+
+  it("should save photo successfully", async () => {
+    const res = await request(server)
+      .post("/api/photos")
+      .send({
+        imageUrl: "https://images.unsplash.com/photo-123",
+        description: "Beautiful landscape",
+        altDescription: "Mountain view",
+        tags: ["nature", "mountain"],
+        userId: testUser.id,
+      });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.message).toEqual("Photo saved successfully");
+  });
+
+  it("should return 400 if userId is missing or invalid", async () => {
+    const res = await request(server)
+      .post("/api/photos")
+      .send({
+        imageUrl: "https://images.unsplash.com/photo-123",
+        description: "Beautiful landscape",
+        altDescription: "Mountain view",
+        tags: ["nature", "mountain"],
+        userId: "not-a-number",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toEqual("Valid userId is required");
+  });
+
+  it("should return 404 if user not found", async () => {
+    const res = await request(server)
+      .post("/api/photos")
+      .send({
+        imageUrl: "https://images.unsplash.com/photo-123",
+        description: "Beautiful landscape",
+        altDescription: "Mountain view",
+        tags: ["nature", "mountain"],
+        userId: 9999, // non-existent
+      });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toEqual("User not found");
+  });
+
+  it("should return 400 for invalid image URL", async () => {
+    const res = await request(server)
+      .post("/api/photos")
+      .send({
+        imageUrl: "http://invalid-url.com",
+        description: "Beautiful landscape",
+        altDescription: "Mountain view",
+        tags: ["nature", "mountain"],
+        userId: testUser.id,
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toEqual("Invalid image URL");
+  });
+
+  it("should return 400 for invalid tags array", async () => {
+    const res = await request(server).post("/api/photos").send({
+      imageUrl: "https://images.unsplash.com/photo-123",
+      description: "Beautiful landscape",
+      altDescription: "Mountain view",
+      tags: "invalid-tags-array",
+      userId: testUser.id,
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toEqual("Tags must be an array");
+  });
+
+  it("should return 400 for too many tags", async () => {
+    const tags = ["one", "two", "three", "four", "five", "six"];
+
+    const res = await request(server).post("/api/photos").send({
+      imageUrl: "https://images.unsplash.com/photo-123",
+      description: "Beautiful landscape",
+      altDescription: "Mountain view",
+      tags: tags,
+      userId: testUser.id,
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toEqual("No more than 5 tags allowed");
   });
 });
