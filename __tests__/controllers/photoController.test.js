@@ -1,10 +1,12 @@
 const {
   searchPhotos,
   savePhoto,
+  searchPhotosByTag,
 } = require("../../src/controllers/photoController");
 const {
   searchImages,
   savePhotoWithTags,
+  retrievePhotosByTag,
 } = require("../../src/services/photoService");
 const { doesUserExistsById } = require("../../src/services/userService");
 const {
@@ -15,6 +17,7 @@ const {
 jest.mock("../../src/services/photoService", () => ({
   searchImages: jest.fn(),
   savePhotoWithTags: jest.fn(),
+  retrievePhotosByTag: jest.fn(),
 }));
 
 jest.mock("../../src/services/userService");
@@ -163,5 +166,85 @@ describe("Photo Controller - savePhoto", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid tags" });
+  });
+});
+
+describe("Photo Controller - searchPhotosByTag", () => {
+  let req, res;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    req = {
+      query: {
+        tags: "nature",
+        sort: "ASC",
+        userId: "1",
+      },
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  it("should return 200 and photos if found", async () => {
+    const mockResponse = [
+      {
+        imageUrl: "https://www.unsplash.com/sample-photo",
+        description: "Beautiful nature",
+        tags: ["nature", "mountain"],
+        dateSaved: new Date(),
+      },
+    ];
+
+    retrievePhotosByTag.mockResolvedValue(mockResponse);
+
+    await searchPhotosByTag(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ photos: mockResponse });
+  });
+
+  it("should return 400 if tag is missing", async () => {
+    req.query.tags = "";
+    await searchPhotosByTag(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tag is required and must be a non-empty string.",
+    });
+  });
+
+  it("should return 400 if sort is invalid", async () => {
+    req.query.sort = "invalid";
+    await searchPhotosByTag(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Sort must be either ASC or DESC.",
+    });
+  });
+
+  it("should return 404 if no photos are found", async () => {
+    retrievePhotosByTag.mockResolvedValue([]);
+    await searchPhotosByTag(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "No images found for the given tag.",
+    });
+  });
+
+  it("should handle internal server errors", async () => {
+    retrievePhotosByTag.mockRejectedValue(new Error("DB error"));
+    await searchPhotosByTag(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Something went wrong.",
+      error: "DB error",
+    });
   });
 });

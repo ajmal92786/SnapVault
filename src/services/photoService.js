@@ -61,7 +61,7 @@ const savePhotoWithTags = async ({
   return newPhoto;
 };
 
-const searchByTagService = async (tagName, sort, userId) => {
+const retrievePhotosByTag = async (tagName, sort, userId) => {
   // Store the search in history
   if (userId) {
     await searchHistory.create({ userId, query: tagName });
@@ -94,4 +94,4 @@ const searchByTagService = async (tagName, sort, userId) => {
   }));
 };
 
-module.exports = { searchImages, savePhotoWithTags, searchByTagService };
+module.exports = { searchImages, savePhotoWithTags, retrievePhotosByTag };

@@ -1,7 +1,7 @@
 const {
   searchImages,
   savePhotoWithTags,
-  searchByTagService,
+  retrievePhotosByTag,
 } = require("../services/photoService");
 const { doesUserExistsById } = require("../services/userService");
 const {
@@ -90,7 +90,7 @@ const searchPhotosByTag = async (req, res) => {
   }
 
   try {
-    const photos = await searchByTagService(tags, sort, userId);
+    const photos = await retrievePhotosByTag(tags, sort, userId);
 
     if (!photos.length) {
       return res
@@ -98,7 +98,7 @@ const searchPhotosByTag = async (req, res) => {
         .json({ message: "No images found for the given tag." });
     }
 
-    return res.json({ photos });
+    return res.status(200).json({ photos });
   } catch (error) {
     res
       .status(500)

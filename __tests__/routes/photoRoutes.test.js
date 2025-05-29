@@ -215,3 +215,69 @@ describe("POST /api/photos/:photoId/tags", () => {
     expect(res.body.message).toBe("Tags must be non-empty strings");
   });
 });
+
+describe("GET /api/photos/tag/search", () => {
+  let testUser;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await user.destroy({ where: {} });
+    await photo.destroy({ where: {} });
+    await tag.destroy({ where: {} });
+
+    testUser = await user.create({
+      username: "testuser",
+      email: "testuser@example.com",
+    });
+
+    // Create sample photo and tags
+    const samplePhoto = await photo.create({
+      imageUrl: "https://www.unsplash.com/sample-photo",
+      description: "Beautiful nature",
+      altDescription: "A beautiful land on the surface of earth.",
+      userId: testUser.id,
+    });
+
+    await tag.bulkCreate([
+      { name: "nature", photoId: samplePhoto.id },
+      { name: "mountain", photoId: samplePhoto.id },
+    ]);
+  });
+
+  it("should return 200 and photos for a valid tag", async () => {
+    const res = await request(server).get(
+      `/api/photos/tag/search?tags=mountain&sort=ASC&userId=${testUser.id}`
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.photos).toBeDefined();
+    expect(res.body.photos[0].tags).toContain("nature");
+  });
+
+  it("should return 404 if no photos for the tag", async () => {
+    const res = await request(app).get(
+      "/api/photos/tag/search?tags=nonexistent&sort=ASC"
+    );
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe("No images found for the given tag.");
+  });
+
+  it("should return 400 for missing tag", async () => {
+    const res = await request(app).get("/api/photos/tag/search");
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe(
+      "Tag is required and must be a non-empty string."
+    );
+  });
+
+  it("should return 400 for invalid sort value", async () => {
+    const res = await request(app).get(
+      "/api/photos/tag/search?tags=nature&sort=INVALID"
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Sort must be either ASC or DESC.");
+  });
+});
