@@ -15,12 +15,11 @@ const getUserSearchHistory = async (req, res) => {
     if (history.length === 0) {
       return res
         .status(404)
-        .json({ message: "No history found for userId: ", userId });
+        .json({ message: `No history found for userId: ${userId}` });
     }
 
     return res.status(200).json({ searchHistory: history });
   } catch (error) {
-    console.error("Error:", error);
     return res.status(500).json({ message: "Something went wrong." });
   }
 };
