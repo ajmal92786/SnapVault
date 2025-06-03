@@ -64,7 +64,13 @@ const savePhotoWithTags = async ({
 const retrievePhotosByTag = async (tagName, sort, userId) => {
   // Store the search in history
   if (userId) {
-    await searchHistory.create({ userId, query: tagName });
+    const existingQuery = await searchHistory.findOne({
+      where: { userId, query: tagName },
+    });
+
+    if (!existingQuery) {
+      await searchHistory.create({ userId, query: tagName });
+    }
   }
 
   // Find all tags matching the query
