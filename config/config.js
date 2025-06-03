@@ -11,6 +11,7 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
+    dialectModule: require("pg"),
   },
   test: {
     username: process.env.DB_USERNAME,
@@ -19,9 +20,11 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
+    dialectModule: require("pg"),
   },
   production: {
     use_env_variable: "DATABASE_URL",
     dialect: "postgres",
+    dialectModule: require("pg"),
   },
 };
