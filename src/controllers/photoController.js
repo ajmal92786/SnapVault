@@ -59,13 +59,17 @@ const savePhoto = async (req, res) => {
   }
 
   try {
-    await savePhotoWithTags({
+    const response = await savePhotoWithTags({
       imageUrl,
       description,
       altDescription,
       tags,
       userId,
     });
+
+    if (response.message) {
+      return res.status(400).json(response);
+    }
 
     return res.status(201).json({ message: "Photo saved successfully" });
   } catch (error) {

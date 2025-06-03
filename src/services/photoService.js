@@ -42,6 +42,17 @@ const savePhotoWithTags = async ({
   tags,
   userId,
 }) => {
+  const existingImage = await photo.findOne({
+    where: {
+      imageUrl,
+      userId,
+    },
+  });
+
+  if (existingImage) {
+    return { message: "Image already exists." };
+  }
+
   const newPhoto = await photo.create({
     imageUrl,
     description,
