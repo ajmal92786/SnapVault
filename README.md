@@ -1,210 +1,305 @@
-# 📸 SnapVault
+# 📸 SnapVault – Photo Storage & Search Backend
 
-A backend project where users can search for photos via the Unsplash API, save them to collections, add tags, and track their search history. Built with **Node.js**, **Express**, **Sequelize**, and **Supabase (PostgreSQL)**.
+SnapVault is a backend service that allows users to search and save images from the Unsplash API, tag them, and retrieve personalized search history. Built with Node.js, Express, PostgreSQL, and Sequelize ORM, this project demonstrates solid RESTful API design, validation, and test coverage.
+
+---
+
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [API Endpoints](#-api-endpoints)
+- [Postman Collection](#-postman-collection)
+- [Installation & Setup](#-installation--setup)
+- [Testing](#-running-tests)
+- [Live API Deployment](#-live-api-deployment)
+- [Folder Structure](#-folder-structure)
+- [Credits](#-credits)
 
 ---
 
 ## 🚀 Features
 
-- Search photos using the Unsplash API
-- Save photos with metadata
-- Add tags to images
-- Track user search history
-- RESTful API structure
-- Sequelize ORM with Supabase PostgreSQL
+- 🔍 Search images from Unsplash API by keyword
+- 👤 Create users (username & email)
+- 💾 Save selected photos with descriptions and tags
+- 🏷️ Tagging system (max 5 tags per photo)
+- 🗂️ Search saved photos by tag with sorting by date
+- 🕵️‍♂️ Track and retrieve user's search history
+- ✅ Comprehensive validations and error handling
+- 🧪 Unit and integration tests with Jest & Supertest
 
 ---
 
-## 📦 Tech Stack
+## 🛠️ Tech Stack
 
-- Node.js + Express
-- Sequelize ORM
-- Supabase (PostgreSQL)
-- dotenv
-- axios
-
----
-
-## 🛠️ Setup Instructions
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/ajmal92786/SnapVault.git
-cd Pic-Storage
-```
-
-### ✅ Prerequisites
-
-- Node.js (v18 or above)
-- npm
-- Supabase PostgreSQL project with credentials
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment
-
-Create a `.env` file at the root with your Supabase/Postgres credentials:
-
-```
-DB_USERNAME=your_user
-DB_PASSWORD=your_password
-DB_NAME=your_db
-DB_HOST=your_host.supabase.co
-DB_PORT=5432
-```
-
-Also add:
-
-```
-UNSPLASH_ACCESS_KEY=your_unsplash_api_key
-```
-
-### 4. Run migrations
-
-```bash
-npx sequelize-cli db:migrate
-```
-
-### 5. Start the server
-
-```bash
-npm start
-```
-
-Server will run on:
-📍 `http://localhost:4040`
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL (via Supabase)
+- **ORM**: Sequelize
+- **API Integration**: Unsplash API
+- **Testing**: Jest, Supertest
+- **Deployment**: Vercel
 
 ---
 
-## 🧪 API: Create New User
+## 📬 API Endpoints
 
-**Endpoint:** `POST /api/users`
-**Description:** Create a new user with username and email
+### 👤 Create User
 
-### ✅ Sample Request:
+`POST /api/users`
+
+#### ➡️ Sample Request
 
 ```json
 {
-  "username": "newUser",
-  "email": "newuser@example.com"
+  "username": "johndoe",
+  "email": "johndoe@example.com"
 }
 ```
 
-### ✅ Sample Response:
+#### ✅ Sample Response
 
 ```json
 {
   "message": "User created successfully",
   "user": {
     "id": 1,
-    "username": "newUser",
-    "email": "newuser@example.com",
+    "username": "johndoe",
+    "email": "johndoe@example.com",
     "createdAt": "...",
     "updatedAt": "..."
   }
 }
 ```
 
----
+### 🔍 Search Images (Unsplash)
 
-## 📂 Project Structure
+`GET /api/photos/search?query=nature`
 
-```
-├── config/               # DB config (Sequelize + environment bindings)
-├── migrations/           # Sequelize CLI migration files
-├── models/               # Sequelize model definitions
-├── src/
-│   ├── controllers/      # Handles request logic
-│   ├── services/         # Contains reusable business logic
-│   ├── validations/      # Input validation functions
-│   └── routes/           # API route definitions
-├── .env                  # Secrets and environment variables
-├── .gitignore            # Prevents sensitive or bulky files from being tracked
-├── package.json          # Project dependencies and scripts
-├── package-lock.json     # Exact versions of installed packages
-└── index.js              # App Entry point
+#### ✅ Sample Response
 
+```json
+{
+  "results": [
+    {
+      "imageUrl": "https://images.unsplash.com/photo-1",
+      "description": "Beautiful sunshine"
+      "altDescription": "Beautiful nature scene"
+    },
+    ...
+  ]
+}
 ```
 
+### 💾 Save Photo
+
+`POST /api/photos`
+
+#### ➡️ Sample Request
+
+```json
+{
+  "imageUrl": "https://images.unsplash.com/photo-abc",
+  "description": "Sunset by the beach",
+  "altDescription": "sunset beach view",
+  "tags": ["sunset", "beach"],
+  "userId": 1
+}
+```
+
+#### ✅ Sample Response
+
+```json
+{
+  "message": "Photo saved successfully"
+}
+```
+
+### ➕ Add Tags to Photo
+
+`POST /api/photos/:photoId/tags`
+
+#### ➡️ Sample Request
+
+```json
+{
+  "tags": ["newTag", "ocean"]
+}
+```
+
+#### ✅ Sample Response
+
+```json
+{
+  "message": "Tags added successfully"
+}
+```
+
+### 🏷️ Search by Tag
+
+`GET /api/photos/tag/search?tags=sunset&sort=ASC&userId=1`
+
+#### ✅ Sample Response
+
+```json
+{
+  "photos": [
+    {
+      "imageUrl": "https://images.unsplash.com/photo-xyz",
+      "description": "Sunset from rooftop",
+      "dateSaved": "2025-05-28T17:41:33.903Z",
+      "tags": ["sunset", "sky"]
+    },
+    ...
+  ]
+}
+```
+
+### 📜 Get Search History
+
+`GET /api/search-history?userId=1`
+
+#### ✅ Sample Response
+
+```json
+{
+  "searchHistory": [
+    { "query": "sunset", "timestamp": "2025-05-26T12:31:00Z" },
+    { "query": "mountain", "timestamp": "2025-05-26T14:05:00Z" },
+    ...
+  ]
+}
+```
+
 ---
 
-## 📮 API Testing (via Postman)
+### 📬 Postman Collection
 
-You can test the API locally with Postman by sending HTTP requests.
+You can test all SnapVault API endpoints using the Postman collection:
 
-### ✅ 1. Start the Server
+## 👉 [Download SnapVault Postman Collection](./postman/Snapvault-Backend.postman_collection.json)
 
-Make sure your backend is running:
+---
+
+## 🔧 Installation & Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/ajmal92786/SnapVault-Backend.git
+   cd SnapVault-Backend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up `.env` file**  
+   Create a `.env` file in the root directory with the following credentials:
+
+   ```env
+   DB_USERNAME=your_user
+   DB_PASSWORD=your_password
+   DB_NAME=your_db
+   DB_HOST=your_host.supabase.co
+   DB_PORT=5432
+   PORT=3000
+   UNSPLASH_ACCESS_KEY=your_unsplash_api_key
+   ```
+
+4. **Run migrations (if using sequelize-cli)**
+
+   ```bash
+   npx sequelize-cli db:migrate
+   ```
+
+5. **Start the server**
+   ```bash
+   npm start
+   ```
+
+---
+
+## 🧪 Testing
+
+SnapVault uses **Jest** and **Supertest** for unit and integration testing.
+
+### ➕ Setup `.env.test`
+
+`.env.test` is **not committed** to GitHub. Create one using the provided template:
+
+```env
+# .env.test
+   DB_USERNAME=your_user
+   DB_PASSWORD=your_password
+   DB_NAME=your_db
+   DB_HOST=your_host.supabase.co
+   DB_PORT=5432
+   PORT=3000
+   UNSPLASH_ACCESS_KEY=your_unsplash_api_key
+```
+
+Make sure `package.json` contains:
+
+```json
+"scripts": {
+  "test": "cross-env NODE_ENV=test jest --runInBand"
+}
+```
+
+### ✅ Run tests
 
 ```bash
-npm start
+npm run test
 ```
 
-Default server URL:
-`http://localhost:4040`
+Test coverage includes:
+
+- ✅ Validation logic
+- ✅ Service methods
+- ✅ Controller behavior
+- ✅ API route integration
 
 ---
 
-### 🧪 2. Create New User (POST `/api/users`)
+### 🚀 Live API Deployment
 
-**Endpoint:**
+All APIs are live and can be accessed at:
+
+👉 **Base URL**: `https://snapvault-backend.onrender.com`
+
+---
+
+## 📁 Folder Structure
 
 ```
-POST http://localhost:4040/api/users
-```
-
-**Headers:**
-
-```
-Content-Type: application/json
-```
-
-**Request Body (JSON):**
-
-```json
-{
-  "username": "newUser",
-  "email": "newuser@example.com"
-}
-```
-
-**Expected Success Response:**
-
-```json
-{
-  "message": "User created successfully",
-  "user": {
-    "id": 1,
-    "username": "newUser",
-    "email": "newuser@example.com",
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-}
+├── __tests__/             # Test files (controllers, routes, services, validations)
+├── config/                # Sequelize & environment config
+├── migrations/            # Sequelize CLI migration files
+├── models/                # Sequelize models (User, Photo, Tag, SearchHistory)
+├── src/                   # Source code
+│   ├── controllers/       # Handles request logic
+│   ├── services/          # Contains reusable business logic
+│   ├── routes/            # API route definitions
+│   └── validations/       # Input validation functions
+├── .env                   # Secrets and environment variables
+├── .env.test              # Secrets and environment variables for testing
+├── .gitignore             # Prevents sensitive or bulky files from being tracked
+├── index.js
+├── package-lock.json      # Exact versions of installed packages
+├── package.json           # Project dependencies and scripts
+├── README.md
+└── server.js              # App entry point
 ```
 
 ---
 
-### ❌ Possible Errors:
+## 🙌 Credits
 
-- **400 Bad Request** if:
-
-  - `username` or `email` is missing
-  - Email format is invalid
-  - Email already exists in DB
-
----
-
----
-
-## 🧑‍💻 Author
-
-Made by [Mohd Ajmal Raza](https://github.com/ajmal92786)
+- Made with ❤️ by MOHD AJMAL RAZA
+- GitHub: [github.com/ajmal92786](https://github.com/ajmal92786)
 
 ---
 

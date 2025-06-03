@@ -7,7 +7,7 @@ let server;
 
 beforeAll((done) => {
   server = http.createServer(app);
-  server.listen(3001, done);
+  server.listen(3000, done);
 });
 
 afterAll(async () => {
