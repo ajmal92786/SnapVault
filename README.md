@@ -7,11 +7,11 @@ SnapVault is a backend service that allows users to search and save images from 
 ## 📚 Table of Contents
 
 - [Features](#-features)
-- [Tech Stack](#-tech-stack)
+- [Tech Stack](#%EF%B8%8F-tech-stack)
 - [API Endpoints](#-api-endpoints)
 - [Postman Collection](#-postman-collection)
 - [Installation & Setup](#-installation--setup)
-- [Testing](#-running-tests)
+- [Testing](#-testing)
 - [Live API Deployment](#-live-api-deployment)
 - [Folder Structure](#-folder-structure)
 - [Credits](#-credits)
