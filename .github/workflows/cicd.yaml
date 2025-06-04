@@ -26,6 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Create .env.test file
+        run: |
+          echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.test
+
       - name: Run tests
         run: npm test
 
