@@ -14,6 +14,7 @@ module.exports = {
     dialectModule: require("pg"),
   },
   test: {
+    use_env_variable: "TEST_DATABASE_URL",
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
