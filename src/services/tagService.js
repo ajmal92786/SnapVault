@@ -9,18 +9,29 @@ const addTagsToPhoto = async (photoId, newTags) => {
     throw new Error("Photo not found");
   }
 
-  const existingTagCount = targetPhoto.tags.length;
+  // Get existing tag names (lowercased for case-insensitive match)
+  const existingTagNames = targetPhoto.tags.map((tag) =>
+    tag.name.toLowerCase()
+  );
 
-  if (existingTagCount + newTags.length > 5) {
-    throw new Error("'Each photo can have a maximum of 5 tags");
+  // Filter out duplicates
+  const uniqueNewTags = newTags.filter(
+    (tag) => !existingTagNames.includes(tag.toLowerCase())
+  );
+
+  const totalTagsAfterAddition = targetPhoto.tags.length + uniqueNewTags.length;
+  if (totalTagsAfterAddition > 5) {
+    throw new Error("Each photo can have a maximum of 5 tags");
   }
 
-  const tagsData = newTags.map((tag) => ({
+  const tagsData = uniqueNewTags.map((tag) => ({
     name: tag,
     photoId: targetPhoto.id,
   }));
 
-  await tag.bulkCreate(tagsData);
+  if (tagsData.length) {
+    await tag.bulkCreate(tagsData);
+  }
 
   return true;
 };
