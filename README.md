@@ -268,7 +268,7 @@ Test coverage includes:
 
 All APIs are live and can be accessed at:
 
-👉 **Base URL**: `https://snapvault-backend.onrender.com`
+👉 **Base URL**: `https://snap-vault-backend-ajmal-razas-projects.vercel.app`
 
 ---
 
